@@ -1,6 +1,6 @@
 """Gera um TextAsset .dat para Import Raw no UABEA, sem reempacotar UnityFS."""
 from __future__ import annotations
-import bisect, csv, struct, sys
+import argparse, bisect, csv, struct
 from collections import defaultdict
 from pathlib import Path
 
@@ -41,13 +41,13 @@ def relocate(position, events):
     index=bisect.bisect_right(events,(position,10**18))-1
     return position+(events[index][1] if index>=0 else 0)
 
-def main(raw,catalog,target,reference):
+def main(raw,catalog,target,reference,only_sources=None):
     blob=raw.read_bytes(); name_len=struct.unpack_from('<I',blob,0)[0]; start=4+name_len; start+=(4-start%4)%4
     script_len=struct.unpack_from('<I',blob,start)[0]; script_start=start+4; script=blob[script_start:script_start+script_len]
     if len(script)!=script_len: raise SystemExit('TextAsset .dat invalido')
     grouped=defaultdict(set)
     for r in csv.DictReader(catalog.open(encoding='utf-8',newline='')):
-        if r['pt_br']: grouped[r['en']].add(r['pt_br'])
+        if r['pt_br'] and (not only_sources or r['en'] in only_sources): grouped[r['en']].add(r['pt_br'])
     mapping={k:next(iter(v)) for k,v in grouped.items() if len(v)==1}
     original_records=list(records(script, False)); arabic=get_script(reference); reference_records=list(records(arabic, False))
     if len(original_records)!=len(reference_records): raise SystemExit('Referencia estrutural incompativel')
@@ -99,4 +99,12 @@ def main(raw,catalog,target,reference):
     target.write_bytes(result)
     print(f'Raw PT-BR: {target}; {changed} ocorrencias alteradas; {len(candidates)} offsets recalculados; {len(result)} bytes')
 
-if __name__=='__main__': main(*(Path(x) for x in sys.argv[1:]))
+if __name__=='__main__':
+    parser=argparse.ArgumentParser(description='Gera Raw PT-BR expansível para Import Raw no UABEA.')
+    parser.add_argument('raw',type=Path)
+    parser.add_argument('catalog',type=Path)
+    parser.add_argument('target',type=Path)
+    parser.add_argument('reference',type=Path)
+    parser.add_argument('--only-source',action='append',default=[],help='Altera somente um texto English específico; repetível.')
+    args=parser.parse_args()
+    main(args.raw,args.catalog,args.target,args.reference,set(args.only_source))

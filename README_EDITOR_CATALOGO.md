@@ -97,3 +97,10 @@ então instala a cópia gerada. Feche o jogo antes de executar.
 O processo requer o .NET 6 Runtime, o UABEA incluído em `ferramentas/uabea-v8`
 e o compilador C# que já vem com o componente MSBuild do Visual Studio. A ponte
 compilada é criada localmente dentro da pasta do UABEA a cada execução.
+
+## Experimento de expansão
+
+O modo experimental `-Modo expand` tenta aumentar uma string sem reduzir o
+texto, recalculando os offsets do `GameScript`. Ele não pode instalar no jogo
+automaticamente e deve ser testado em cópia. Consulte
+[`EXPERIMENTO_EXPANSAO.md`](EXPERIMENTO_EXPANSAO.md) antes de usá-lo.

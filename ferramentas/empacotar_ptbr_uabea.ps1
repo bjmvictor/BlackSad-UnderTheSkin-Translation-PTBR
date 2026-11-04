@@ -11,6 +11,9 @@ param(
     [long] $PathId = -1248374269677720278,
     [ValidateSet('en', 'es')]
     [string] $IdiomaDestino = 'en',
+    [ValidateSet('fixed', 'expand')]
+    [string] $Modo = 'fixed',
+    [string[]] $SomenteFonte = @(),
     [switch] $InstalarNoJogo
 )
 
@@ -20,13 +23,14 @@ $repoRoot = (Resolve-Path (Join-Path $scriptDir '..')).Path
 $uabeaDir = Join-Path $scriptDir 'uabea-v8'
 $geradorRaw = Join-Path $scriptDir 'gerar_raw_ptbr_tamanho_fixo.py'
 $geradorSlot = Join-Path $scriptDir 'gerar_raw_ptbr_slot_fixo.py'
+$geradorExpansivel = Join-Path $scriptDir 'gerar_raw_uabea_ptbr.py'
 $ponteFonte = Join-Path $scriptDir 'UabeaRawPatcher.cs'
 if ([string]::IsNullOrWhiteSpace($Catalogo)) { $Catalogo = Join-Path $repoRoot 'texto\catalogo\pt-BR.csv' }
 if ([string]::IsNullOrWhiteSpace($RawOriginal)) { $RawOriginal = Join-Path $repoRoot 'saida-teste\uabea-csv\Script-original.dat' }
 if ([string]::IsNullOrWhiteSpace($ReferenciaArabe)) { $ReferenciaArabe = Join-Path $repoRoot 'referencia\Blacksad_Data\StreamingAssets\assets_data\2172dc1d-d264-45aa-a94c-231bf3de6baa' }
 if ([string]::IsNullOrWhiteSpace($PastaSaida)) { $PastaSaida = Join-Path $repoRoot 'saida-teste\uabea-csv' }
 
-foreach ($arquivo in @($Catalogo, $RawOriginal, $ReferenciaArabe, $geradorRaw, $geradorSlot, $ponteFonte)) {
+foreach ($arquivo in @($Catalogo, $RawOriginal, $ReferenciaArabe, $geradorRaw, $geradorSlot, $geradorExpansivel, $ponteFonte)) {
     if (-not (Test-Path $arquivo -PathType Leaf)) {
         throw "Arquivo obrigatorio nao encontrado: $arquivo"
     }
@@ -39,16 +43,24 @@ $BundleOrigem = (Resolve-Path $BundleOrigem).Path
 $Catalogo = (Resolve-Path $Catalogo).Path
 $RawOriginal = (Resolve-Path $RawOriginal).Path
 $ReferenciaArabe = (Resolve-Path $ReferenciaArabe).Path
+if ($Modo -eq 'expand' -and $IdiomaDestino -ne 'en') { throw 'O modo expandível experimental usa somente o slot English.' }
+if ($Modo -eq 'expand' -and -not $SomenteFonte.Count) { throw 'Informe ao menos um -SomenteFonte para o teste expansível.' }
+if ($Modo -eq 'expand' -and $InstalarNoJogo) { throw 'O modo expansível é experimental e não pode instalar diretamente no jogo.' }
 
 New-Item -ItemType Directory -Force -Path $PastaSaida | Out-Null
 $PastaSaida = (Resolve-Path $PastaSaida).Path
 $nomeBase = [IO.Path]::GetFileName($BundleOrigem)
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$rawPtBr = Join-Path $PastaSaida ("Script-ptbr-{0}-{1}.dat" -f $IdiomaDestino, $timestamp)
-$bundleSaida = Join-Path $PastaSaida ("{0}.ptbr-{1}-uabea-{2}" -f $nomeBase, $IdiomaDestino, $timestamp)
+$rawPtBr = Join-Path $PastaSaida ("Script-ptbr-{0}-{1}-{2}.dat" -f $IdiomaDestino, $Modo, $timestamp)
+$bundleSaida = Join-Path $PastaSaida ("{0}.ptbr-{1}-{2}-uabea-{3}" -f $nomeBase, $IdiomaDestino, $Modo, $timestamp)
 
 Write-Host '1/3 Gerando o TextAsset PT-BR a partir do CSV...'
-if ($IdiomaDestino -eq 'es') {
+if ($Modo -eq 'expand') {
+    $argumentosExpansao = @($RawOriginal, $Catalogo, $rawPtBr, $ReferenciaArabe)
+    foreach ($fonte in $SomenteFonte) { $argumentosExpansao += '--only-source'; $argumentosExpansao += $fonte }
+    & python $geradorExpansivel @argumentosExpansao
+}
+elseif ($IdiomaDestino -eq 'es') {
     & python $geradorSlot $RawOriginal $Catalogo es $rawPtBr
 }
 else {
@@ -108,5 +120,6 @@ if ($InstalarNoJogo) {
 else {
     Write-Host 'Concluido. O bundle de saida NAO foi copiado para a pasta do jogo:' -ForegroundColor Green
     Write-Host $bundleSaida
-    Write-Host 'Teste esse arquivo manualmente no jogo antes de usar -InstalarNoJogo.' -ForegroundColor Yellow
+    if ($Modo -eq 'expand') { Write-Host 'EXPERIMENTAL: teste esta cópia manualmente. O script bloqueia instalação automática nesse modo.' -ForegroundColor Yellow }
+    else { Write-Host 'Teste esse arquivo manualmente no jogo antes de usar -InstalarNoJogo.' -ForegroundColor Yellow }
 }

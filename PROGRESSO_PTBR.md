@@ -43,6 +43,9 @@
 - `empacotar_ptbr_uabea.ps1`: gera o Raw a partir do CSV e o aplica em uma cópia
   do bundle com as bibliotecas do UABEA, sem remonte UnityPy. A opção
   `-InstalarNoJogo` cria backup e pede confirmação antes de substituir o bundle.
+- `EXPERIMENTO_EXPANSAO.md`: roteiro do teste controlado que expande somente
+  `Dunn's will` no slot English. O modo experimental bloqueia instalação direta
+  e aguarda validação manual no jogo antes de ser ampliado.
 
 O mod PT-BR usara temporariamente a selecao de idioma **English** do jogo: a
 estrutura ja existente para ingles e a que recebera os textos portugueses. A

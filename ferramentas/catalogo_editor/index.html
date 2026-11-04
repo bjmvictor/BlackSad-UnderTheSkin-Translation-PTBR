@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Oficina PT-BR — Editor de catálogo</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23008c85'/%3E%3Cpath d='M18 46l5-15L40 14l10 10-17 17-15 5z' fill='white'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">✦</div>
+          <div><h1>Oficina PT-BR</h1><p>Editor de catálogo</p></div>
+        </div>
+        <label class="section-label" for="search">Buscar texto</label>
+        <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Trecho em um idioma…" autocomplete="off"></div>
+        <p class="help">A busca considera apenas os idiomas marcados abaixo.</p>
+
+        <fieldset id="search-language-filter" class="filter-group search-language-filter"><legend>Pesquisar em</legend></fieldset>
+
+        <fieldset id="language-filter" class="filter-group"><legend>Colunas exibidas</legend></fieldset>
+        <label class="section-label" for="status-filter">Status</label>
+        <select id="status-filter"><option value="">Todos os status</option></select>
+        <label class="limit-filter"><input id="over-limit-filter" type="checkbox"> <span>Apenas acima do limite de bytes</span></label>
+        <button id="reset-filters" class="quiet-button">Limpar filtros</button>
+
+        <section class="game-tools" aria-labelledby="game-tools-title">
+          <h2 id="game-tools-title">Instalação do jogo</h2>
+          <p id="game-status" class="game-status">Localizando Blacksad…</p>
+          <label>Pasta que contém Blacksad.exe<input id="game-path" type="text" spellcheck="false" autocomplete="off" placeholder="C:\…\steamapps\common\Blacksad"></label>
+          <div class="game-path-actions"><button id="use-game-path" class="quiet-button" type="button">Usar pasta</button><button id="detect-game" class="quiet-button" type="button">Detectar</button><button id="browse-game" class="quiet-button" type="button">Escolher…</button></div>
+          <label>Slot que exibirá o PT-BR<select id="target-language"><option value="en">English — melhor cobertura</option><option value="es">Español — textos longos pontuais</option></select></label>
+          <button id="apply-game" class="game-action game-action-primary" type="button" disabled>Gerar e aplicar PT-BR no jogo</button>
+          <label>Restaurar backup<select id="game-backups" disabled><option value="">Nenhum backup disponível</option></select></label>
+          <button id="restore-backup" class="game-action" type="button" disabled>Restaurar backup</button>
+          <button id="restore-original" class="game-action game-action-danger" type="button">Restaurar original</button>
+          <p class="game-note">Feche o jogo antes. Depois de aplicar, selecione no jogo o idioma escolhido acima. English tem mais cobertura; Español pode acomodar alguns textos mais longos.</p>
+        </section>
+
+        <div class="side-summary"><span>Resultados</span><strong id="total-side">—</strong><small id="total-side-label">textos unificados</small></div>
+        <div class="sidebar-footer">Dados locais · CSV UTF-8<br>Backup automático a cada salvamento</div>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div><p class="eyebrow">CATÁLOGO ATIVO</p><h2>Revisão lado a lado</h2><p id="catalog-path" class="catalog-path">Carregando catálogo…</p></div>
+          <div class="topbar-actions"><span id="save-state" class="save-state">Selecione uma mensagem para editar</span><button id="refresh" class="secondary">↻ Recarregar</button></div>
+        </header>
+
+        <section class="filter-strip" aria-label="Resumo da busca">
+          <span id="result-summary">Carregando mensagens…</span>
+          <label>Linhas por página <select id="page-size"><option>20</option><option selected>25</option><option>50</option><option>100</option></select></label>
+        </section>
+
+        <div class="table-wrap" tabindex="0">
+          <table>
+            <thead id="message-head"></thead>
+            <tbody id="message-body"></tbody>
+          </table>
+          <div id="empty-state" class="empty-state" hidden>Nenhuma mensagem corresponde aos filtros.</div>
+        </div>
+        <nav class="pagination" aria-label="Paginação"><button id="previous-page" class="secondary">← Anterior</button><span id="page-summary"></span><label class="page-jump">Ir para <input id="page-jump" type="number" min="1" inputmode="numeric" aria-label="Ir para a página"></label><button id="go-to-page" class="secondary" type="button">Ir</button><button id="next-page" class="secondary">Próxima →</button></nav>
+
+      </section>
+    </main>
+    <div id="editor-modal" class="editor-modal" hidden>
+      <section id="editor" class="editor-panel" role="dialog" aria-modal="true" aria-labelledby="editor-id">
+          <div class="editor-header"><div><p class="eyebrow">EDIÇÃO UNIFICADA</p><h3 id="editor-id"></h3><p id="editor-offset"></p></div><button id="close-editor" class="icon-button" aria-label="Fechar editor">×</button></div>
+          <p id="variation-warning" class="variation-warning" hidden></p>
+          <div class="compare-grid">
+            <label><span>English · origem</span><textarea id="source-text" readonly></textarea></label>
+            <label class="editable"><span>Português (Brasil) · editável</span><textarea id="ptbr-text" spellcheck="true"></textarea><small id="character-count"></small></label>
+            <label><span id="reference-label">Español · referência</span><textarea id="reference-text" readonly></textarea></label>
+          </div>
+          <div class="editor-meta"><label>Status<select id="edit-status"></select></label><label>Notas<textarea id="edit-notes" placeholder="Contexto, revisão pendente, observações…"></textarea></label></div>
+          <div class="editor-actions"><p>Atalho: <kbd>Ctrl</kbd> + <kbd>S</kbd> salva esta mensagem. O servidor cria um backup antes de gravar.<br><span id="translator-note"></span></p><div class="editor-buttons"><button id="translate-message" class="secondary" type="button">Traduzir do inglês</button><button id="save-message" class="primary">Salvar no CSV</button></div></div>
+      </section>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

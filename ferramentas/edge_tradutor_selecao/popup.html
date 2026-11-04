@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tradutor de seleção</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">↔</div>
+      <h1>Traduzir seleção</h1>
+      <p>Selecione o texto e pressione <kbd>Ctrl</kbd> + <kbd>Espaço</kbd>.</p>
+      <button id="translate" type="button">Traduzir a seleção desta aba</button>
+      <p id="status" role="status" aria-live="polite">PT-BR · tradução automática revisável</p>
+      <p class="hint">No Editor PT-BR, selecione o inglês: o resultado entra diretamente no campo Português.</p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

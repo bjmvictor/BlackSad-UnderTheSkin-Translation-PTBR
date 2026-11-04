@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Tradutor de Seleção PT-BR",
+  "version": "1.0.0",
+  "description": "Traduz a seleção para PT-BR e a aplica no campo de destino.",
+  "action": {
+    "default_title": "Traduzir seleção para PT-BR",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "permissions": ["clipboardWrite"],
+  "host_permissions": ["<all_urls>", "https://translate.googleapis.com/*"],
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content-script.js"],
+    "run_at": "document_idle"
+  }],
+  "commands": {
+    "translate-selection": {
+      "suggested_key": {
+        "default": "Ctrl+Space",
+        "mac": "MacCtrl+Space"
+      },
+      "description": "Traduz a seleção para português brasileiro"
+    }
+  }
+}

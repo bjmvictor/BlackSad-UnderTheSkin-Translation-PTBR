@@ -1,0 +1,19 @@
+# Arquivos locais do jogo e saídas reproduzíveis (não versionar).
+/backups-jogo/
+/extraido-original/
+/extraido-estruturado/
+/mod-ptbr-uabea/
+/referencia/
+/saida-teste/
+/teste-uabea/
+/texto/backups/
+/texto/bruto/
+
+# Dependências baixadas/localmente compiladas.
+/ferramentas/uabea-v8/
+/ferramentas/__pycache__/
+*.py[cod]
+
+# Artefatos de validação local.
+/.playwright-mcp/
+*.log

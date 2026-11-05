@@ -1,5 +1,12 @@
 # Experimento: expansão do slot English
 
+> **Resultado do teste inicial:** falhou. Ao usar o bundle gerado para
+> `Dunn's will`, o jogo permaneceu carregando indefinidamente. Portanto este
+> modo não deve ser usado para aplicar tradução; ficou preservado apenas como
+> registro técnico. O experimento híbrido em
+> [`EXPERIMENTO_HIBRIDO.md`](EXPERIMENTO_HIBRIDO.md) evita alterar o tamanho do
+> `GameScript` e é a alternativa que está sendo validada agora.
+
 Este teste tenta ultrapassar o tamanho originalmente reservado para uma string
 sem remontar o bundle com UnityPy. Ele aumenta somente o `TextAsset/Script`,
 recalcula os offsets internos e usa o mesmo Import Raw via UABEA que já foi

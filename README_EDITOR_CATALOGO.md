@@ -104,3 +104,8 @@ O modo experimental `-Modo expand` tenta aumentar uma string sem reduzir o
 texto, recalculando os offsets do `GameScript`. Ele não pode instalar no jogo
 automaticamente e deve ser testado em cópia. Consulte
 [`EXPERIMENTO_EXPANSAO.md`](EXPERIMENTO_EXPANSAO.md) antes de usá-lo.
+
+O modo `-Modo hybrid` também é experimental, mas preserva o tamanho do script:
+ele pode emprestar o espaço da entrada Español para a entrada English em textos
+pontuais. Consulte [`EXPERIMENTO_HIBRIDO.md`](EXPERIMENTO_HIBRIDO.md) para o
+teste de `RESOLUÇÃO`.

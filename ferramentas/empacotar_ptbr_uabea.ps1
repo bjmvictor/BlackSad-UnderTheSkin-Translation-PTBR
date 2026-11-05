@@ -11,9 +11,10 @@ param(
     [long] $PathId = -1248374269677720278,
     [ValidateSet('en', 'es')]
     [string] $IdiomaDestino = 'en',
-    [ValidateSet('fixed', 'expand')]
+    [ValidateSet('fixed', 'expand', 'hybrid')]
     [string] $Modo = 'fixed',
     [string[]] $SomenteFonte = @(),
+    [string] $TextoHibrido,
     [switch] $InstalarNoJogo
 )
 
@@ -24,13 +25,14 @@ $uabeaDir = Join-Path $scriptDir 'uabea-v8'
 $geradorRaw = Join-Path $scriptDir 'gerar_raw_ptbr_tamanho_fixo.py'
 $geradorSlot = Join-Path $scriptDir 'gerar_raw_ptbr_slot_fixo.py'
 $geradorExpansivel = Join-Path $scriptDir 'gerar_raw_uabea_ptbr.py'
+$geradorHibrido = Join-Path $scriptDir 'gerar_raw_ptbr_hibrido.py'
 $ponteFonte = Join-Path $scriptDir 'UabeaRawPatcher.cs'
 if ([string]::IsNullOrWhiteSpace($Catalogo)) { $Catalogo = Join-Path $repoRoot 'texto\catalogo\pt-BR.csv' }
 if ([string]::IsNullOrWhiteSpace($RawOriginal)) { $RawOriginal = Join-Path $repoRoot 'saida-teste\uabea-csv\Script-original.dat' }
 if ([string]::IsNullOrWhiteSpace($ReferenciaArabe)) { $ReferenciaArabe = Join-Path $repoRoot 'referencia\Blacksad_Data\StreamingAssets\assets_data\2172dc1d-d264-45aa-a94c-231bf3de6baa' }
 if ([string]::IsNullOrWhiteSpace($PastaSaida)) { $PastaSaida = Join-Path $repoRoot 'saida-teste\uabea-csv' }
 
-foreach ($arquivo in @($Catalogo, $RawOriginal, $ReferenciaArabe, $geradorRaw, $geradorSlot, $geradorExpansivel, $ponteFonte)) {
+foreach ($arquivo in @($Catalogo, $RawOriginal, $ReferenciaArabe, $geradorRaw, $geradorSlot, $geradorExpansivel, $geradorHibrido, $ponteFonte)) {
     if (-not (Test-Path $arquivo -PathType Leaf)) {
         throw "Arquivo obrigatorio nao encontrado: $arquivo"
     }
@@ -43,9 +45,10 @@ $BundleOrigem = (Resolve-Path $BundleOrigem).Path
 $Catalogo = (Resolve-Path $Catalogo).Path
 $RawOriginal = (Resolve-Path $RawOriginal).Path
 $ReferenciaArabe = (Resolve-Path $ReferenciaArabe).Path
-if ($Modo -eq 'expand' -and $IdiomaDestino -ne 'en') { throw 'O modo expandível experimental usa somente o slot English.' }
-if ($Modo -eq 'expand' -and -not $SomenteFonte.Count) { throw 'Informe ao menos um -SomenteFonte para o teste expansível.' }
-if ($Modo -eq 'expand' -and $InstalarNoJogo) { throw 'O modo expansível é experimental e não pode instalar diretamente no jogo.' }
+if ($Modo -in @('expand', 'hybrid') -and $IdiomaDestino -ne 'en') { throw 'Os modos experimentais usam somente o slot English.' }
+if ($Modo -in @('expand', 'hybrid') -and -not $SomenteFonte.Count) { throw 'Informe ao menos um -SomenteFonte para o teste experimental.' }
+if ($Modo -eq 'hybrid' -and [string]::IsNullOrWhiteSpace($TextoHibrido)) { throw 'Informe -TextoHibrido para o teste híbrido.' }
+if ($Modo -in @('expand', 'hybrid') -and $InstalarNoJogo) { throw 'Os modos experimentais não podem instalar diretamente no jogo.' }
 
 New-Item -ItemType Directory -Force -Path $PastaSaida | Out-Null
 $PastaSaida = (Resolve-Path $PastaSaida).Path
@@ -59,6 +62,11 @@ if ($Modo -eq 'expand') {
     $argumentosExpansao = @($RawOriginal, $Catalogo, $rawPtBr, $ReferenciaArabe)
     foreach ($fonte in $SomenteFonte) { $argumentosExpansao += '--only-source'; $argumentosExpansao += $fonte }
     & python $geradorExpansivel @argumentosExpansao
+}
+elseif ($Modo -eq 'hybrid') {
+    $argumentosHibridos = @($RawOriginal, $Catalogo, $ReferenciaArabe, $rawPtBr, '--text', $TextoHibrido)
+    foreach ($fonte in $SomenteFonte) { $argumentosHibridos += '--only-source'; $argumentosHibridos += $fonte }
+    & python $geradorHibrido @argumentosHibridos
 }
 elseif ($IdiomaDestino -eq 'es') {
     & python $geradorSlot $RawOriginal $Catalogo es $rawPtBr
@@ -120,6 +128,6 @@ if ($InstalarNoJogo) {
 else {
     Write-Host 'Concluido. O bundle de saida NAO foi copiado para a pasta do jogo:' -ForegroundColor Green
     Write-Host $bundleSaida
-    if ($Modo -eq 'expand') { Write-Host 'EXPERIMENTAL: teste esta cópia manualmente. O script bloqueia instalação automática nesse modo.' -ForegroundColor Yellow }
+    if ($Modo -in @('expand', 'hybrid')) { Write-Host 'EXPERIMENTAL: teste esta cópia manualmente. O script bloqueia instalação automática nesse modo.' -ForegroundColor Yellow }
     else { Write-Host 'Teste esse arquivo manualmente no jogo antes de usar -InstalarNoJogo.' -ForegroundColor Yellow }
 }

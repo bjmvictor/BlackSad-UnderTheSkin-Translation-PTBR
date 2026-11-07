@@ -60,6 +60,37 @@ English não comporta o PT-BR, ele usa o maior campo já existente naquela mesma
 mensagem e o identifica como English. Consulte
 [EXPERIMENTO_HIBRIDO.md](EXPERIMENTO_HIBRIDO.md) para os limites e testes.
 
+## Gerar uma release instalável
+
+Para que outra pessoa instale sem Python, UABEA ou Visual Studio, gere um ZIP
+de release a partir do CSV revisado:
+
+```powershell
+.\ferramentas\gerar_instalador_release.ps1 -Versao 0.1.0
+```
+
+O comando cria `dist/Blacksad_PTBR-v0.1.0.zip`. Publique esse ZIP na aba
+**Releases** do GitHub, e não o bundle inteiro do jogo. Dentro dele há apenas
+o aplicador, o Raw PT-BR e as dependências mínimas; ao executar
+`Instalar-PTBR.cmd`, a pessoa usuária:
+
+- confirma a elevação do Windows;
+- tem a pasta Steam detectada automaticamente ou pode escolhê-la manualmente;
+- recebe um backup do bundle original em
+  `Blacksad_PTBR_Backup/` dentro da pasta do jogo;
+- inicia o jogo no idioma **English**.
+
+`Desinstalar-PTBR.cmd` restaura exatamente esse backup e mantém a cópia para
+auditoria; saves e configurações do jogo não são alterados. A geração da
+release exige os mesmos pré-requisitos de desenvolvimento já descritos acima,
+inclusive a cópia original local e o UABEA, mas quem baixa o ZIP precisa apenas
+do .NET 6 Runtime x64 e de uma instalação legítima do jogo.
+
+O Raw de tradução é produzido a partir de dados do jogo. Antes de publicar ou
+redistribuir qualquer release, confira os termos da editora e da loja; o
+projeto não concede direitos sobre os arquivos do jogo. O pacote inclui os
+avisos de licença de terceiros em `TERCEIROS.txt`.
+
 ## Como contribuir
 
 - Faça alterações somente em `pt_br`, `status` e `notes` do CSV pelo editor.

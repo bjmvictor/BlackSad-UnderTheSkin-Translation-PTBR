@@ -1,5 +1,6 @@
 # Arquivos locais do jogo e saídas reproduzíveis (não versionar).
 /backups-jogo/
+/dist/
 /extraido-original/
 /extraido-estruturado/
 /mod-ptbr-uabea/

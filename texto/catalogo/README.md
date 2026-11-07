@@ -5,6 +5,8 @@
 
 - `id` e `offset` são identificadores estáveis da entrada no arquivo original.
 - `en` é o texto-fonte; as outras colunas são referências oficiais já existentes.
+  Textos UTF-8 legíveis, incluindo reticências (`…`) e aspas tipográficas,
+  também fazem parte do catálogo.
 - Preencha somente `pt_br`.
 - Preserve comandos iniciados por `$`, tags entre colchetes, variáveis e quebras de linha.
 - `status` deve ser `pending`, `draft`, `review` ou `approved`.

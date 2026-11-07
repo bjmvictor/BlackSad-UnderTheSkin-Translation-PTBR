@@ -1,42 +1,35 @@
-# Blacksad: Under the Skin — base técnica PT-BR
+# Notas técnicas
 
-## Estado inicial
+## Texto do jogo
 
-- Jogo analisado: Steam Windows x64, build `15955197`.
-- Engine: Unity `2021.3.32f1`.
-- A instalação original não contém uma tabela de idiomas editável (`.po`, `.csv`, `.json` ou `.locres`).
-- Os textos e elementos de interface estão serializados em assets Unity e bundles de `Blacksad_Data`.
+Os diálogos e parte da interface ficam no `TextAsset` chamado `Script`, dentro
+do bundle `2172dc1d-d264-45aa-a94c-231bf3de6baa`. Cada tabela contém oito
+campos de idioma e IDs fixos:
 
-## Referência examinada
+| Idioma | ID |
+| --- | ---: |
+| English | 10 |
+| Español | 34 |
+| 简体中文 | 40 |
+| Français | 14 |
+| Deutsch | 15 |
+| Italiano | 21 |
+| Nederlands | 9 |
+| Русский | 30 |
 
-A pasta `referencia` contém uma localização árabe de terceiros. Ela é compatível com a build instalada e substitui 42 arquivos dentro de `Blacksad_Data`:
+## Empacotamento seguro
 
-- 21 arquivos principais Unity (`level1`, `resources.assets` e `sharedassets*.assets`);
-- 20 bundles em `StreamingAssets/assets_data`;
-- `Managed/Assembly-CSharp.dll`;
-- uma DLL adicional, `B52.Blacksad.Arabic.dll`.
+Alterar o tamanho do `GameScript` e recalcular seus offsets causou carregamento
+infinito no jogo. O fluxo aceito usa **Import Raw do UABEA** e preserva todos
+os tamanhos do script.
 
-A DLL extra é específica ao árabe: faz escrita RTL, ligação de caracteres e ajustes de fonte. Ela não é necessária nem deve fazer parte da futura versão PT-BR, que usa o conjunto latino já presente no jogo.
+Quando o PT-BR excede o campo English, o gerador híbrido grava a tradução em
+outro campo existente que comporte o texto e troca os IDs desse campo e do
+English. A escolha é por tabela; não muda offsets nem o tamanho do bundle.
 
-## Material de trabalho criado
+## Material local
 
-- `extraido-original/`: exportação dos assets-alvo originais sem todas as dependências de scripts; útil para comparação bruta.
-- `extraido-estruturado/`: exportação dos mesmos assets com as 141 bibliotecas gerenciadas originais carregadas; é a base para localizar os campos de texto e seus contextos.
-
-Esses diretórios são derivados da instalação original. Eles não devem ser distribuídos como mod.
-
-## Estratégia de implementação
-
-1. Identificar, na exportação estruturada, os objetos de diálogo, escolhas, legendas e UI que contêm texto em inglês.
-2. Extrair esses campos para uma planilha UTF-8 com identificador do asset, contexto e texto-fonte.
-3. Traduzir para PT-BR preservando variáveis, tags, quebras de linha e marcadores de controle.
-4. Reimportar somente os assets efetivamente alterados em uma cópia de trabalho, sem tocar no diretório Steam.
-5. Montar um pacote de instalação com apenas os arquivos alterados e um script de backup/restauração.
-6. Validar o menu, escolhas cronometradas, legendas, caderno, deduções e finais no jogo.
-
-## Regras de segurança
-
-- Não editar arquivos em `C:\Program Files (x86)\Steam\...` diretamente.
-- Nunca incluir `B52.Blacksad.Arabic.dll` na versão PT-BR.
-- Manter a compatibilidade com a build `15955197`; após uma atualização do jogo, repetir a comparação antes de instalar qualquer pacote.
-- Não reutilizar textos ou recursos traduzidos de terceiros: a referência serve somente para identificar os arquivos e a arquitetura do mod.
+Exports completos de assets, referências de terceiros, bundles gerados e
+backups não fazem parte do repositório. Eles são grandes, regeneráveis ou
+proprietários. Para reproduzir a base, use o bundle da própria instalação Steam
+conforme o [README.md](README.md).

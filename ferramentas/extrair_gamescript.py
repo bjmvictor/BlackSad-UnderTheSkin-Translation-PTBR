@@ -57,7 +57,8 @@ def decode(raw: bytes) -> str | None:
 
 
 def valid_english(value: str) -> bool:
-    return bool(value) and value.isascii() and all(32 <= ord(char) <= 126 for char in value)
+    """Aceita texto UTF-8 legível, incluindo reticências e aspas tipográficas."""
+    return bool(value) and all(char.isprintable() or char in "\n\t" for char in value)
 
 
 def extract(data: bytes) -> list[dict[str, str]]:

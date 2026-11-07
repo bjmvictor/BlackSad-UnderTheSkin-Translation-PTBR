@@ -4,11 +4,11 @@ from __future__ import annotations
 import argparse
 import csv
 import struct
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from gerar_raw_uabea_ptbr import get_script
-from gerar_raw_ptbr_slot_fixo import HEADER, LANGUAGE_IDS, _entry
+from gerar_raw_ptbr_slot_fixo import HEADER, LANGUAGE_IDS, LANGUAGES, _entry
 
 
 def tables(data: bytes | bytearray):
@@ -71,7 +71,30 @@ def fit(text: str, size: int) -> tuple[bytes, bool]:
     return clipped + b" " * (size - len(clipped)), False
 
 
-def generate(raw: Path, catalog: Path, arab_bundle: Path, target: Path, source_filter: set[str], override: str) -> None:
+def write_exact(data: bytearray, entry: tuple[int, int, int, int], text: str) -> bool:
+    """Grava um texto completo no campo; nunca deixa uma tradução truncada."""
+    encoded = text.encode("utf-8")
+    capacity = entry[3] - entry[2]
+    if len(encoded) > capacity:
+        return False
+    data[entry[2] : entry[3]] = encoded + b" " * (capacity - len(encoded))
+    return True
+
+
+def write_fallback(data: bytearray, entry: tuple[int, int, int, int], source: str) -> None:
+    """Mantém o English original quando nenhum slot consegue conter o PT-BR."""
+    encoded, _ = fit(source, entry[3] - entry[2])
+    data[entry[2] : entry[3]] = encoded
+
+
+def generate(
+    raw: Path,
+    catalog: Path,
+    arab_bundle: Path,
+    target: Path,
+    source_filter: set[str] | None = None,
+    override: str | None = None,
+) -> None:
     blob = raw.read_bytes()
     start, old_length, original = raw_script(blob)
     base = bytearray(get_script(arab_bundle))
@@ -81,45 +104,59 @@ def generate(raw: Path, catalog: Path, arab_bundle: Path, target: Path, source_f
         raise ValueError("Estruturas original e referência não coincidem")
 
     translations = mapping(catalog)
-    fixed = fallback = 0
-    for (source, _), (_, base_entries) in zip(original_tables, base_tables):
-        english_start, english_end = base_entries[0][2:]
-        value = translations.get(source, source)
-        written, ok = fit(value, english_end - english_start)
-        base[english_start:english_end] = written
-        if ok:
-            fixed += translations.get(source, source) != source
-        else:
-            fallback += 1
+    source_filter = source_filter or set()
+    if bool(source_filter) != bool(override):
+        raise ValueError("Use --only-source e --text juntos, ou nenhum dos dois.")
 
-    swapped = 0
-    encoded_override = override.encode("utf-8")
+    fixed = fallback = swapped = 0
+    donors_used: Counter[str] = Counter()
     for (source, _), (_, base_entries) in zip(original_tables, base_tables):
-        if source not in source_filter:
+        english = base_entries[0]
+        value = override if source in source_filter else translations.get(source, source)
+
+        if write_exact(base, english, value):
+            fixed += value != source
             continue
-        english, spanish = base_entries[0], base_entries[1]
-        spanish_capacity = spanish[3] - spanish[2]
-        if len(encoded_override) > spanish_capacity:
-            raise ValueError(f"'{source}' não cabe no slot Español ({len(encoded_override)} > {spanish_capacity} bytes)")
-        base[spanish[2] : spanish[3]] = encoded_override + b" " * (spanish_capacity - len(encoded_override))
-        struct.pack_into("<I", base, english[0], LANGUAGE_IDS[1])
-        struct.pack_into("<I", base, spanish[0], LANGUAGE_IDS[0])
-        swapped += 1
-    if not swapped:
-        raise ValueError("Nenhuma ocorrência do texto solicitado foi encontrada")
+
+        if value != source:
+            # Escolhe o maior campo já existente desta tabela. Cada troca é
+            # local: English passa a ter o ID do doador e o doador recebe ID 10.
+            # Assim, nenhum tamanho de string, offset ou tamanho do script muda.
+            donors = sorted(
+                enumerate(base_entries[1:], start=1),
+                key=lambda item: item[1][3] - item[1][2],
+                reverse=True,
+            )
+            for donor_index, donor in donors:
+                if not write_exact(base, donor, value):
+                    continue
+                write_fallback(base, english, source)
+                struct.pack_into("<I", base, english[0], donor[1])
+                struct.pack_into("<I", base, donor[0], english[1])
+                donors_used[LANGUAGES[donor_index]] += 1
+                swapped += 1
+                break
+            else:
+                write_fallback(base, english, source)
+                fallback += 1
+            continue
+
+        write_fallback(base, english, source)
+        fallback += value != source
 
     padding = b"\0" * ((4 - len(base) % 4) % 4)
     target.write_bytes(blob[:start] + struct.pack("<I", len(base)) + base + padding + blob[start + 4 + old_length :])
-    print(f"Hibrido gerado: {target}; PT-BR fixo em {fixed}; ingles preservado por limite em {fallback}; emprestimos Espanol->English em {swapped}; bytes {target.stat().st_size}")
+    donor_summary = ", ".join(f"{LANGUAGES[key] if isinstance(key, int) else key}:{count}" for key, count in donors_used.items()) or "nenhum"
+    print(f"Hibrido gerado: {target}; PT-BR no English em {fixed}; PT-BR emprestado em {swapped} ({donor_summary}); ingles preservado por limite em {fallback}; bytes {target.stat().st_size}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Gera Raw híbrido para teste via UABEA.")
+    parser = argparse.ArgumentParser(description="Gera Raw híbrido seguro para aplicação via UABEA.")
     parser.add_argument("raw", type=Path)
     parser.add_argument("catalog", type=Path)
     parser.add_argument("arab_bundle", type=Path)
     parser.add_argument("target", type=Path)
-    parser.add_argument("--only-source", action="append", required=True)
-    parser.add_argument("--text", required=True)
+    parser.add_argument("--only-source", action="append", help="Sobrescreve pontualmente um texto para teste.")
+    parser.add_argument("--text", help="Texto usado junto de --only-source.")
     args = parser.parse_args()
-    generate(args.raw, args.catalog, args.arab_bundle, args.target, set(args.only_source), args.text)
+    generate(args.raw, args.catalog, args.arab_bundle, args.target, set(args.only_source or ()), args.text)

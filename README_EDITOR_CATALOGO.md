@@ -1,5 +1,8 @@
 # Oficina PT-BR — editor local de catálogo
 
+Leia primeiro o [README.md](README.md) para preparar os arquivos locais do
+jogo e o UABEA. Este guia descreve o uso diário do editor.
+
 Abra um PowerShell na raiz do projeto e execute:
 
 ```powershell
@@ -44,10 +47,11 @@ campo ou clique em **Escolher…** para abrir o seletor de pastas do Windows.
 - **Gerar e aplicar PT-BR no jogo** usa o CSV salvo no editor, gera o bundle com
   as bibliotecas do UABEA e só então o troca de forma atômica. Não usa a
   remontagem UnityPy que o jogo rejeita.
-- Escolha o **slot que exibirá o PT-BR** antes de aplicar. **English** usa a
-  estrutura de maior cobertura validada; **Español** usa os espaços reservados
-  para espanhol e pode acomodar alguns textos mais longos. No jogo, selecione
-  o mesmo idioma escolhido no editor.
+- Escolha o **slot que exibirá o PT-BR** antes de aplicar. **English —
+  cobertura máxima** usa o campo English quando possível e, para textos
+  maiores, empresta automaticamente o maior campo de outro idioma na mesma
+  mensagem, sem expandir o arquivo. No jogo, selecione **English**. **Español**
+  é mantido como modo de compatibilidade direta.
 - Antes de aplicar, restaurar um backup ou restaurar o original, a ferramenta
   salva a versão atual em `backups-jogo/`.
 - **Restaurar backup** lista somente cópias da mesma instalação selecionada.
@@ -94,9 +98,10 @@ arquivo no jogo. Depois de validado, use o mesmo comando com
 `-InstalarNoJogo`: ele pede confirmação, cria um backup ao lado do bundle e só
 então instala a cópia gerada. Feche o jogo antes de executar.
 
-O processo requer o .NET 6 Runtime, o UABEA incluído em `ferramentas/uabea-v8`
-e o compilador C# que já vem com o componente MSBuild do Visual Studio. A ponte
-compilada é criada localmente dentro da pasta do UABEA a cada execução.
+O processo requer o .NET 6 Runtime, uma cópia local do UABEA em
+`ferramentas/uabea-v8` e o compilador C# do componente MSBuild do Visual
+Studio. Esses binários não são distribuídos pelo Git. A ponte compilada é criada
+localmente dentro da pasta do UABEA a cada execução.
 
 ## Experimento de expansão
 
@@ -105,7 +110,8 @@ texto, recalculando os offsets do `GameScript`. Ele não pode instalar no jogo
 automaticamente e deve ser testado em cópia. Consulte
 [`EXPERIMENTO_EXPANSAO.md`](EXPERIMENTO_EXPANSAO.md) antes de usá-lo.
 
-O modo `-Modo hybrid` também é experimental, mas preserva o tamanho do script:
-ele pode emprestar o espaço da entrada Español para a entrada English em textos
-pontuais. Consulte [`EXPERIMENTO_HIBRIDO.md`](EXPERIMENTO_HIBRIDO.md) para o
-teste de `RESOLUÇÃO`.
+No editor, a opção **English — cobertura máxima** usa automaticamente o modo
+`-Modo hybrid`: ela preserva o tamanho do script, usa o campo English quando
+couber e pode emprestar o maior espaço de outro idioma somente para os textos
+que precisarem. Consulte [`EXPERIMENTO_HIBRIDO.md`](EXPERIMENTO_HIBRIDO.md)
+para os testes já validados no jogo.

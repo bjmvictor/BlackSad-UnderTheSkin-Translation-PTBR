@@ -67,7 +67,7 @@ async function translateSelected() {
 }
 function scheduleSearch() { window.clearTimeout(state.debounce); state.debounce = window.setTimeout(() => { state.query = $("#search").value.trim(); state.page = 1; loadMessages(); }, 220); }
 async function gameRequest(path, payload = {}) { const response = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Não foi possível concluir a operação no jogo."); return data; }
-function targetLanguageLabel() { return state.targetLanguage === "es" ? "Español" : "English"; }
+function targetLanguageLabel() { return state.targetLanguage === "es" ? "Español" : "English (híbrido)"; }
 function renderGame(game) {
   if (!game) return;
   state.game = game; const path = $("#game-path"); if (document.activeElement !== path) path.value = game.selected || "";

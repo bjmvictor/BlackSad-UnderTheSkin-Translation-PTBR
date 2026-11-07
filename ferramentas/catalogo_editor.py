@@ -71,18 +71,22 @@ def translation_byte_limits(target_language: str = "en") -> dict[str, int]:
             return slot_byte_limits(ORIGINAL_BUNDLE, "es")
         if target_language != "en":
             return {}
-        from gerar_raw_uabea_ptbr import get_script, records
+        from gerar_raw_uabea_ptbr import get_script
+        from gerar_raw_ptbr_hibrido import tables
 
         original = get_script(ORIGINAL_BUNDLE)
-        reference = get_script(ROOT / "referencia" / GAME_BUNDLE_RELATIVE)
-        source_records = list(records(original, False))
-        reference_records = list(records(reference, False))
-        if len(source_records) != len(reference_records):
+        # A referência segura é o próprio bundle original copiado localmente
+        # pelo colaborador. Nenhum asset de terceiros é necessário no repositório.
+        reference = get_script(ORIGINAL_BUNDLE)
+        source_tables = list(tables(original))
+        reference_tables = list(tables(reference))
+        if len(source_tables) != len(reference_tables):
             return {}
         limits: dict[str, int] = {}
-        for source_record, reference_record in zip(source_records, reference_records):
-            source = source_record[0]
-            capacity = reference_record[2] - (reference_record[1] + 4)
+        for (source, _), (_, entries) in zip(source_tables, reference_tables):
+            # A geração English híbrida aceita o maior campo desta tabela e só
+            # troca o ID quando o campo English não comporta o PT-BR.
+            capacity = max(entry[3] - entry[2] for entry in entries)
             limits[source] = min(limits.get(source, capacity), capacity)
         return limits
     except Exception:
@@ -390,6 +394,8 @@ def build_uabea_bundle(source_bundle: Path, catalog: Path, target_language: str)
             "-Catalogo", str(catalog), "-PastaSaida", str(output_dir),
             "-IdiomaDestino", target_language,
         ]
+        if target_language == "en":
+            command.extend(["-Modo", "hybrid"])
         result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=600, check=False)
         if result.returncode != 0:
             detail = (result.stderr or result.stdout or "O UABEA não conseguiu gerar o bundle PT-BR.").strip()
@@ -422,7 +428,7 @@ def install_bundle(root_value: str, catalog: Path, action: str, backup_id: str =
             raise ValueError("Slot de idioma inválido.")
         source = build_uabea_bundle(target, catalog, target_language)
         reason = f"aplicar_ptbr_uabea_{target_language}"
-        label = "English" if target_language == "en" else "Español"
+        label = "English híbrido" if target_language == "en" else "Español"
         message = f"PT-BR gerado pelo UABEA no slot {label} e aplicado ao jogo"
     elif action == "restore_original":
         if not ORIGINAL_BUNDLE.is_file() or file_hash(ORIGINAL_BUNDLE) != ORIGINAL_BUNDLE_SHA256:

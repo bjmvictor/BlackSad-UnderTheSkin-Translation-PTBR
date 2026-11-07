@@ -32,12 +32,12 @@
           <p id="game-status" class="game-status">Localizando Blacksad…</p>
           <label>Pasta que contém Blacksad.exe<input id="game-path" type="text" spellcheck="false" autocomplete="off" placeholder="C:\…\steamapps\common\Blacksad"></label>
           <div class="game-path-actions"><button id="use-game-path" class="quiet-button" type="button">Usar pasta</button><button id="detect-game" class="quiet-button" type="button">Detectar</button><button id="browse-game" class="quiet-button" type="button">Escolher…</button></div>
-          <label>Slot que exibirá o PT-BR<select id="target-language"><option value="en">English — melhor cobertura</option><option value="es">Español — textos longos pontuais</option></select></label>
+          <label>Slot que exibirá o PT-BR<select id="target-language"><option value="en">English — cobertura máxima (recomendado)</option><option value="es">Español — compatibilidade direta</option></select></label>
           <button id="apply-game" class="game-action game-action-primary" type="button" disabled>Gerar e aplicar PT-BR no jogo</button>
           <label>Restaurar backup<select id="game-backups" disabled><option value="">Nenhum backup disponível</option></select></label>
           <button id="restore-backup" class="game-action" type="button" disabled>Restaurar backup</button>
           <button id="restore-original" class="game-action game-action-danger" type="button">Restaurar original</button>
-          <p class="game-note">Feche o jogo antes. Depois de aplicar, selecione no jogo o idioma escolhido acima. English tem mais cobertura; Español pode acomodar alguns textos mais longos.</p>
+          <p class="game-note">Feche o jogo antes. Em English, o gerador usa primeiro o campo English e, se o PT-BR não couber, aproveita automaticamente o maior espaço disponível naquela mensagem sem aumentar o bundle. Depois de aplicar, selecione English no jogo.</p>
         </section>
 
         <div class="side-summary"><span>Resultados</span><strong id="total-side">—</strong><small id="total-side-label">textos unificados</small></div>

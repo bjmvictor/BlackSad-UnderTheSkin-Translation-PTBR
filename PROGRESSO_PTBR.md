@@ -1,53 +1,40 @@
-# Progresso da traducao PT-BR
+# Progresso da tradução PT-BR
 
-## Base validada
+## Base atual
 
-- Jogo alvo: Steam Windows x64, build `15955197`.
-- Fonte principal: `GameScript/Script.bytes`, no bundle
-  `2172dc1d-d264-45aa-a94c-231bf3de6baa`.
-- SHA-256 do GameScript original:
-  `23972e6ce27b881758d8df24d27167b39ae12c2fd54041890c43c86880c98501`.
-- Catalogo extraido: 18.006 ocorrencias, equivalentes a 8.269 textos ingleses
-  distintos.
+- Jogo-alvo: Steam Windows x64, build-base `15955197`.
+- Bundle de texto: `Blacksad_Data/StreamingAssets/assets_data/2172dc1d-d264-45aa-a94c-231bf3de6baa`.
+- SHA-256 do `GameScript` original: `23972e6ce27b881758d8df24d27167b39ae12c2fd54041890c43c86880c98501`.
+- Catálogo: 18.008 ocorrências físicas, agrupadas em 8.270 textos English.
+- Todas as linhas possuem um texto PT-BR; a maior parte ainda é
+  `machine-draft` e requer revisão contextual.
 
-## Traducao em andamento
+## Fluxo validado
 
-- Lotes `texto/lotes/abertura-001.csv` a `abertura-004.csv`: 247 textos
-  distintos, propagados para 584 ocorrencias.
-- Estado dos lotes: `draft`; requer revisao contextual durante os testes no jogo.
-- `texto/lotes/correcoes-usuario-002.csv`: corrige a resposta “What pictures?”
-  e os avisos de salvamento automático para todas as variantes de plataforma.
-- O preview em `saida-teste/ptbr-preview/` contem apenas o bundle de texto para
-  teste tecnico. Ele nao e uma versao distribuivel nem deve ser copiado sobre a
-  instalacao sem backup.
-- O preview atualizado esta em `saida-teste/ptbr-preview-v4/`; ele foi gerado a
-  partir do bundle original e inclui as correcoes `correcoes-usuario-002`.
+1. O editor salva o CSV em UTF-8 de modo atômico e agrupa textos repetidos.
+2. O empacotador usa Import Raw do UABEA; remontagem UnityPy não deve ser usada
+   para instalar o bundle no jogo.
+3. Em **English — cobertura máxima**, o gerador mantém o tamanho do
+   `GameScript`. Se PT-BR não couber no campo English, usa o maior campo de
+   idioma existente na mesma tabela e troca somente os IDs dos dois campos.
+4. Os testes no jogo validaram caracteres acentuados em `RESOLUÇÃO` e
+   `RESOLUÇÃO DINÂMICA`. `DIMINUIR ZOOM` usa o campo Italiano, pois o Español
+   possui apenas 12 bytes para uma tradução de 13 bytes.
 
-## Ferramentas
+## Itens de revisão prioritária
 
-- `catalogo_editor.py`: servidor local para pesquisar, comparar idiomas lado a
-  lado e editar PT-BR/status/notas com backup automático do CSV; aceita
-  tradução automática local opcional via Argos Translate, sem API externa, e
-  gera e aplica o bundle de texto com UABEA, sempre criando backup da instalação
-  antes da troca.
-- `edge_tradutor_selecao/`: extensão local Manifest V3 para Edge; com
-  `Ctrl+Espaço`, traduz a seleção e preenche o campo PT-BR no editor, sem
-  configurar chave de API.
-- `extrair_gamescript.py`: extrai e identifica o catalogo UTF-8 a partir do
-  bundle ou do TextAsset bruto.
-- `aplicar_lote.py`: propaga um lote revisavel pelo catalogo mestre.
-- `gerar_bundle_ptbr.py`: monta o bundle modificado fora da Steam. Sem
-  `--allow-partial`, ele se recusa a gerar um pacote com textos faltantes.
-- `testar_remontagem.py`: confirma que a remontagem preserva o TextAsset quando
-  nenhuma traducao e aplicada.
-- `empacotar_ptbr_uabea.ps1`: gera o Raw a partir do CSV e o aplica em uma cópia
-  do bundle com as bibliotecas do UABEA, sem remonte UnityPy. A opção
-  `-InstalarNoJogo` cria backup e pede confirmação antes de substituir o bundle.
-- `EXPERIMENTO_EXPANSAO.md`: roteiro do teste controlado que expande somente
-  `Dunn's will` no slot English. O modo experimental bloqueia instalação direta
-  e aguarda validação manual no jogo antes de ser ampliado.
+- diálogos com `machine-draft`;
+- textos que permanecem em inglês por excederem todos os campos existentes;
+- escolhas cronometradas, caderno de detetive, deduções e telas de opções;
+- tags, variáveis e marcadores como `<1>`, `<BR>` e `$...`.
 
-O mod PT-BR usara temporariamente a selecao de idioma **English** do jogo: a
-estrutura ja existente para ingles e a que recebera os textos portugueses. A
-traducao do rotulo de idioma e das telas de interface sera tratada depois, nos
-assets de UI identificados pela comparacao com a referencia.
+## Arquivos principais
+
+- `texto/catalogo/pt-BR.csv`: fonte de verdade da tradução.
+- `ferramentas/catalogo_editor.py`: editor e aplicação com backup.
+- `ferramentas/empacotar_ptbr_uabea.ps1`: geração manual por UABEA.
+- `README.md`: preparação de uma máquina nova e contribuição.
+- `README_EDITOR_CATALOGO.md`: uso diário do editor.
+
+Arquivos do jogo, UABEA, backups e saídas de teste são locais/ignorados. Veja
+o [README.md](README.md) antes de tentar aplicar o mod em outra instalação.

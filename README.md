@@ -5,6 +5,11 @@ Projeto de tradução comunitária para a versão Steam Windows (build-base
 UTF-8 em `texto/catalogo/pt-BR.csv`; o editor local permite pesquisar, comparar
 idiomas, editar ocorrências repetidas e aplicar o resultado ao jogo com backup.
 
+## Andamento
+
+Estimativa atual: aproximadamente **80% traduzido** e **60% revisado** para
+PT-BR. A revisão ainda depende de contexto e validação dentro do jogo.
+
 ## O que está no Git
 
 - código do editor, empacotador e extensão opcional do Edge;
